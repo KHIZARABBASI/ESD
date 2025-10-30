@@ -1,0 +1,8 @@
+convertapi==2.0.0
+fastapi==0.120.0
+PyMuPDF==1.26.5
+python-dotenv==1.1.1
+ultralytics==8.3.218
+uvicorn==0.38.0
+python-multipart==0.0.6
+google-genai == 1.46.0

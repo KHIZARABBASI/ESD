@@ -1,0 +1,16 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+.venv/
+dist/
+build/
+*.log
+model/best.pt
+uploads/
+outputs/
+.pytest_cache
+*.egg-info
+/.git
