@@ -205,6 +205,12 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+# <<<<<<< HEAD
 
 
-backend\venv
+# backend\venv
+# =======
+# >>>>>>> 6db745ef1df8a49f66e1ffe853492b952f293bab
+
+backend/outputs/
+.backend/uploads/

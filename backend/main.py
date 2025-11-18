@@ -114,7 +114,7 @@ def convert_dwf_to_pdf(dwf_file_path: str) -> str:
         dwf_file_path = os.path.abspath(dwf_file_path)
         output_dir = os.path.dirname(dwf_file_path) or os.getcwd()
 
-        result = convertapi.convert("pdf", {"File": dwf_file_path}, from_format="dwf")
+        result = convertapi.convert("pdf", {"File": dwf_file_path,'SpaceToConvert': "all"}, from_format="dwf")
         saved_files = result.save_files(output_dir)
 
         if saved_files:
@@ -134,7 +134,7 @@ def _convert_page_worker(pdf_path_str, page_num, output_dir_str):
     try:
         doc = fitz.open(pdf_path_str)
         page = doc.load_page(page_num)
-        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+        pix = page.get_pixmap(matrix=fitz.Matrix(6, 6))
         img_path = Path(output_dir_str) / f"page_{page_num + 1}.jpg"
         pix.save(str(img_path))
         doc.close()
@@ -305,7 +305,7 @@ async def preprocess_file():
         if ext == ".pdf":
             return await pdf_to_images(input_path, pdf_output_dir, max_workers=4)
             
-        elif ext == ".dwf":
+        elif ext in [".dwf", ".dwfx", "dwg", ".dxf"]:
             # Offload blocking DWF conversion to thread
             pdf_path = await asyncio.to_thread(convert_dwf_to_pdf, input_path)
             return await pdf_to_images(pdf_path, pdf_output_dir, max_workers=4)
@@ -448,17 +448,29 @@ async def get_results():
         # ============================================================
         # STEP 1: Run OCR extractions asynchronously for all pages
         # ============================================================
-        print("🚀 Running asynchronous OCR extractions...")
+        # print("🚀 Running asynchronous OCR extractions...")
 
-        ocr_tasks = [extract_drawing_metadata(str(img_file)) for img_file in all_images]
-        ocr_results = await asyncio.gather(*ocr_tasks, return_exceptions=True)
+        # ocr_tasks = [extract_drawing_metadata(str(img_file)) for img_file in all_images]
+        # ocr_results = await asyncio.gather(*ocr_tasks, return_exceptions=True)
 
-        for page_idx, (img_file, ocr_result) in enumerate(zip(all_images, ocr_results), start=1):
-            if isinstance(ocr_result, Exception):
-                print(f"❌ OCR failed for page {page_idx}: {ocr_result}")
+        # for page_idx, (img_file, ocr_result) in enumerate(zip(all_images, ocr_results), start=1):
+        #     if isinstance(ocr_result, Exception):
+        #         print(f"❌ OCR failed for page {page_idx}: {ocr_result}")
+        #         meta_data_list[page_idx] = {}
+        #     else:
+        #         meta_data_list[page_idx] = ocr_result
+        #     page_detections[page_idx] = []
+        # STEP 1: Run OCR extractions for all pages
+        print("🚀 Running OCR extractions...")
+        meta_data_list = {}
+        
+        for page_idx, img_file in enumerate(all_images, start=1):
+            try:
+                result = extract_drawing_metadata(str(img_file))
+                meta_data_list[page_idx] = result
+            except Exception as e:
+                print(f"❌ OCR failed for page {page_idx}: {e}")
                 meta_data_list[page_idx] = {}
-            else:
-                meta_data_list[page_idx] = ocr_result
             page_detections[page_idx] = []
 
         # ============================================================

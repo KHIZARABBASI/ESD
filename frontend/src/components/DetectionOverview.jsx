@@ -41,7 +41,7 @@ export default function DetectionOverview({ data = [], metaData = {} }) {
         <div className="section-title">Detection Overview</div>
         <button className="btn-small export-btn" onClick={handleExportCSV}>
           <i className="pi pi-download" style={{ marginRight: 0 }}></i>
-          Export CSV
+          &nbsp; Export CSV
         </button>
       </div>
 
@@ -77,7 +77,7 @@ export default function DetectionOverview({ data = [], metaData = {} }) {
 
       {/* ---------------- META DATA ---------------- */}
       <div className="detection-title-row" style={{ marginTop: 1 }}>
-        <div className="section-title">Meta Data</div>
+        <div className="section-title">Metadata</div>
       </div>
 
       <div className="scrollable-table">

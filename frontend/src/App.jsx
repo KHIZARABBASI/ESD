@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -18,9 +17,13 @@ export default function App() {
   const [detectionData, setDetectionData] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [status, setStatus] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+  
+  // 🔒 State to track if upload should be disabled
+  const [isUploadDisabled, setIsUploadDisabled] = useState(false);
   
 
-  // // 🧹 Reset backend storage when app starts
+  // 🧹 Reset backend storage when app starts
   useEffect(() => {
     const resetServer = async () => {
       try {
@@ -34,7 +37,7 @@ export default function App() {
   }, []);
 
   
- // 🔄 Refresh Handler
+  // 🔄 Refresh Handler
   const handleRefresh = async () => {
     try {
       setStatus("🔄 Refreshing...");
@@ -48,7 +51,12 @@ export default function App() {
       setCurrentPage(1);
       setStatus("");
       
-      console.log("🔄 Application refreshed");
+      // 🔓 Re-enable upload section
+      setIsUploadDisabled(false);
+      
+      // 👇 Force re-render (remount) UploadSection
+      setRefreshKey(prev => prev + 1);
+      console.log("🔄 Application refreshed - Upload re-enabled");
     } catch (err) {
       console.error("⚠️ Refresh failed:", err);
       setStatus("❌ Refresh failed");
@@ -64,6 +72,10 @@ export default function App() {
       }
 
       console.log("✅ Step 1: Upload complete.");
+      
+      // 🔒 Disable upload section after successful upload
+      setIsUploadDisabled(true);
+      
       setActiveStep(0); // Start at step 0 (File Upload)
       setStatus("✅ File uploaded");
 
@@ -80,13 +92,13 @@ export default function App() {
       console.log("✅ Step 3: Model loaded.");
 
       // Step 4: Run inference
-      setActiveStep(3); // Fixed: was 4, should be 3
+      setActiveStep(3);
       setStatus("🚀 Running inference...");
       await axios.get(`${BACKEND}/inference`);
       console.log("✅ Step 4: Inference complete.");
 
       // Step 5: Fetch results
-      setActiveStep(4); // Fixed: was 5, should be 4
+      setActiveStep(4);
       setStatus("📊 Fetching results...");
       const resultsRes = await axios.get(`${BACKEND}/results`);
       const data = resultsRes.data;
@@ -104,6 +116,8 @@ export default function App() {
     } catch (error) {
       console.error("⚠️ Pipeline error:", error);
       setStatus("❌ Pipeline failed. Check backend logs.");
+      // 🔓 Re-enable upload if pipeline fails
+      setIsUploadDisabled(false);
     }
   };
 
@@ -148,7 +162,12 @@ export default function App() {
       {/* Top Grid */}
       <div className="main-grid" style={{ marginTop: 12}}>
         <div className="card">
-          <UploadSection onUploadComplete={handleUploadComplete} />
+          {/* Pass isDisabled prop to UploadSection */}
+          <UploadSection
+            key={refreshKey} 
+            onUploadComplete={handleUploadComplete}
+            isDisabled={isUploadDisabled}
+          />
 
           
         <div style={{ marginTop: 12}}>
@@ -167,14 +186,15 @@ export default function App() {
               transition: 'all 0.2s ease',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              gap: '8px'
             }}
             onMouseEnter={(e) => {
               e.target.style.backgroundColor = '#e8e8e8';
               e.target.style.borderColor = '#bbb';
             }}
             onMouseLeave={(e) => {
-              e.target.style.backgroundColor = '#f5f5f5';
+              e.target.style.backgroundColor = '#b6b4b4ff';
               e.target.style.borderColor = '#ddd';
             }}
           >
